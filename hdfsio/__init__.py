@@ -1,6 +1,6 @@
 
 """
-Python utils for importing IDE CSV format files
+Python util for accessing Hadoop HDFS
 """
 
 import sys
@@ -9,13 +9,18 @@ if sys.version < '2.6':
     sys.exit(1)
 
 # load the native extensions
-import subprocess as sub
+import subprocess
+import tempfile
 import re
 import logging
 
+# the hadoop executable path
 HADOOP = 'hadoop'
 
 class HDFSIOException(Exception):
+    """
+    Exception that hdfsio.file will throw on any IO problem
+    """
     def __init__(self, value):
         self.value = value
         logging.info("HDFSIOException: " + str(self))
@@ -26,23 +31,38 @@ class HDFSIOException(Exception):
 
 class file(object):
     """
-    Basic file object to access IO functions of HDFS
+    hdfsio.file
+
+    main class
+    define an HDFS file/directory object and then do something with it
+
+    import hdfsio
+    f = hdfsio.file('thingy.txt')
+    if f.exists():
+        do something
+
+    data = f.get()
+
     """
+
     def __init__(self, name):
+        """
+        Basic file object to access IO functions of HDFS
+        """
         self.error = None
         self.name = name
 
-    """
-    Does the file exist in HDFS
-    """
     def exists(self):
+        """
+        Does the file exist in HDFS
+        """
         output = False
         errors = False
         self.error = None
         p = False
         f = []
         try:
-            p = sub.Popen([HADOOP, 'fs', '-ls', self.name], stdout=sub.PIPE, stderr=sub.PIPE)
+            p = subprocess.Popen([HADOOP, 'fs', '-ls', self.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, errors = p.communicate()
         except OSError:
             raise HDFSIOException('OSError on ls for: ' + self.name)
@@ -71,30 +91,40 @@ class file(object):
 
         #return False
 
-    """
-    Get the contents of the file
-    """
-    def get(self):
+    def get(self, handle=False):
+        """
+        Get the contents of the file
+        parameters:
+          * handle - True/False
+            pass back an open file handle to the HDFS object contents
+        """
         output = False
         errors = False
         p = False
-        f = []
+        tmp = False
         try:
-            p = sub.Popen([HADOOP, 'fs', '-get', self.name, '-'], stdout=sub.PIPE, stderr=sub.PIPE)
+            if handle:
+                tmp = tempfile.mktemp()
+                p = subprocess.Popen([HADOOP, 'fs', '-get', self.name, tmp], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            else:
+                p = subprocess.Popen([HADOOP, 'fs', '-get', self.name, '-'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, errors = p.communicate()
         except OSError:
             raise HDFSIOException('OSError on get for: ' + self.name)
         
         if len(errors) > 0 or p.wait() != 0:
             raise HDFSIOException('IO failed on get for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
-        
-        return output
+       
+        if handle:
+            return open(tmp)
+        else:
+            return output
 
 
-    """
-    Remove the file or directory from HDFS
-    """
     def rmr(self):
+        """
+        Remove the file or directory from HDFS
+        """
         output = False
         errors = False
         p = False
@@ -103,7 +133,7 @@ class file(object):
             return True
 
         try:
-            p = sub.Popen([HADOOP, 'fs', '-rmr', self.name], stdout=sub.PIPE, stderr=sub.PIPE)
+            p = subprocess.Popen([HADOOP, 'fs', '-rmr', self.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, errors = p.communicate()
         except OSError:
             raise HDFSIOException('OSError on rmr for: ' + self.name)
@@ -113,10 +143,10 @@ class file(object):
         
         return True
 
-    """
-    Create a directory
-    """
     def mkdir(self):
+        """
+        Create a directory
+        """
         output = False
         errors = False
         p = False
@@ -125,7 +155,7 @@ class file(object):
             return False
 
         try:
-            p = sub.Popen([HADOOP, 'fs', '-mkdir', self.name], stdout=sub.PIPE, stderr=sub.PIPE)
+            p = subprocess.Popen([HADOOP, 'fs', '-mkdir', self.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, errors = p.communicate()
         except OSError:
             raise HDFSIOException('OSError on mkdir for: ' + self.name)
@@ -136,10 +166,10 @@ class file(object):
         return True
 
 
-    """
-    Write to the file - will error if already exists
-    """
     def write(self, data):
+        """
+        Write to the file - will error if already exists
+        """
         output = False
         errors = False
         p = False
@@ -147,7 +177,7 @@ class file(object):
         if not type(data) == list:
             data = [str(data)]
         try:
-            p = sub.Popen([HADOOP, 'fs', '-copyFromLocal', '-', self.name], stdin=sub.PIPE, stdout=sub.PIPE, stderr=sub.PIPE)
+            p = subprocess.Popen([HADOOP, 'fs', '-copyFromLocal', '-', self.name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             output, errors = p.communicate(input="\n".join(data))
         except OSError:
             raise HDFSIOException('OSError on write for: ' + self.name)
