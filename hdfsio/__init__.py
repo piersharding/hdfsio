@@ -50,24 +50,26 @@ class file(object):
         if len(errors) > 0 or p.wait() != 0:
             self.error = errors + ' rc: ' + str(p.wait())
             return False
+
+        return True
        
-        ls = output.split("\n")
-        if len(ls) <= 1:
-            return False
+        #ls = output.split("\n")
+        #if len(ls) <= 1:
+        #    return False
 
-        # remove the title line of output
-        ls.pop(0)
-        if len(ls) == 1:
-            l = ls[0].split(" ").pop()
-            if l == self.name:
-                return True
-        for l in ls:
-            f = l.split(" ")
-            i = f.pop()
-            if re.match('^'+self.name, i):
-                return True
+        ## remove the title line of output
+        #ls.pop(0)
+        #if len(ls) == 1:
+        #    l = ls[0].split(" ").pop()
+        #    if l == self.name:
+        #        return True
+        #for l in ls:
+        #    f = l.split(" ")
+        #    i = f.pop()
+        #    if re.match('^'+self.name, i):
+        #        return True
 
-        return False
+        #return False
 
     """
     Get the contents of the file
@@ -108,6 +110,28 @@ class file(object):
         
         if len(errors) > 0 or p.wait() != 0:
             raise HDFSIOException('IO failed on rmr for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
+        
+        return True
+
+    """
+    Create a directory
+    """
+    def mkdir(self):
+        output = False
+        errors = False
+        p = False
+        f = []
+        if self.exists():
+            return False
+
+        try:
+            p = sub.Popen([HADOOP, 'fs', '-mkdir', self.name], stdout=sub.PIPE, stderr=sub.PIPE)
+            output, errors = p.communicate()
+        except OSError:
+            raise HDFSIOException('OSError on mkdir for: ' + self.name)
+        
+        if len(errors) > 0 or p.wait() != 0:
+            raise HDFSIOException('IO failed on mkdir for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
         
         return True
 
