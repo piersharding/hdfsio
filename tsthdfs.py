@@ -21,6 +21,7 @@ for i in h:
     print "line: ", i.strip()
 
 f = hdfsio.file('/user/hduser/hdfsiotest')
+print "ls: ", f.name, f.ls()
 print "rmr: ", f.name, f.rmr()
 print "exists: ", f.name, f.exists()
 

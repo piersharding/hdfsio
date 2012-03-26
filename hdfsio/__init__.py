@@ -72,24 +72,39 @@ class file(object):
             return False
 
         return True
-       
-        #ls = output.split("\n")
-        #if len(ls) <= 1:
-        #    return False
 
-        ## remove the title line of output
-        #ls.pop(0)
-        #if len(ls) == 1:
-        #    l = ls[0].split(" ").pop()
-        #    if l == self.name:
-        #        return True
-        #for l in ls:
-        #    f = l.split(" ")
-        #    i = f.pop()
-        #    if re.match('^'+self.name, i):
-        #        return True
 
-        #return False
+    def ls(self):
+        """
+        List the file or directory
+        """
+        output = False
+        errors = False
+        self.error = None
+        p = False
+        f = []
+        try:
+            p = subprocess.Popen([HADOOP, 'fs', '-ls', self.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, errors = p.communicate()
+        except OSError:
+            raise HDFSIOException('OSError on ls for: ' + self.name)
+        
+        if len(errors) > 0 or p.wait() != 0:
+            self.error = errors + ' rc: ' + str(p.wait())
+            return False
+
+        ls = output.strip().split("\n")
+        if len(ls) <= 1:
+            return False
+
+        # remove the title line of output
+        ls.pop(0)
+        data = []
+        for l in ls:
+            data.append(l.split(" ").pop())
+
+        return data
+
 
     def get(self, handle=False):
         """
