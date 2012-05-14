@@ -67,7 +67,7 @@ class file(object):
         except OSError:
             raise HDFSIOException('OSError on ls for: ' + self.name)
         
-        if len(errors) > 0 or p.wait() != 0:
+        if (len(errors) > 0 and errors.strip() != 'Warning: $HADOOP_HOME is deprecated.') or p.wait() != 0:
             self.error = errors + ' rc: ' + str(p.wait())
             return False
 
@@ -89,7 +89,7 @@ class file(object):
         except OSError:
             raise HDFSIOException('OSError on ls for: ' + self.name)
         
-        if len(errors) > 0 or p.wait() != 0:
+        if (len(errors) > 0 and errors.strip() != 'Warning: $HADOOP_HOME is deprecated.') or p.wait() != 0:
             self.error = errors + ' rc: ' + str(p.wait())
             return False
 
@@ -127,7 +127,7 @@ class file(object):
         except OSError:
             raise HDFSIOException('OSError on get for: ' + self.name)
         
-        if len(errors) > 0 or p.wait() != 0:
+        if (len(errors) > 0 and errors.strip() != 'Warning: $HADOOP_HOME is deprecated.') or p.wait() != 0:
             raise HDFSIOException('IO failed on get for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
        
         if handle:
@@ -153,7 +153,7 @@ class file(object):
         except OSError:
             raise HDFSIOException('OSError on rmr for: ' + self.name)
         
-        if len(errors) > 0 or p.wait() != 0:
+        if (len(errors) > 0 and errors.strip() != 'Warning: $HADOOP_HOME is deprecated.') or p.wait() != 0:
             raise HDFSIOException('IO failed on rmr for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
         
         return True
@@ -175,7 +175,7 @@ class file(object):
         except OSError:
             raise HDFSIOException('OSError on mkdir for: ' + self.name)
         
-        if len(errors) > 0 or p.wait() != 0:
+        if (len(errors) > 0 and errors.strip() != 'Warning: $HADOOP_HOME is deprecated.') or p.wait() != 0:
             raise HDFSIOException('IO failed on mkdir for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
         
         return True
@@ -197,7 +197,7 @@ class file(object):
         except OSError:
             raise HDFSIOException('OSError on write for: ' + self.name)
         
-        if len(errors) > 0 or p.wait() != 0:
+        if (len(errors) > 0 and errors.strip() != 'Warning: $HADOOP_HOME is deprecated.') or p.wait() != 0:
             raise HDFSIOException('IO failed on write for: ' + self.name + ' - ' + errors + ' rc: ' + str(p.wait()))
         
         return True
